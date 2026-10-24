@@ -1,0 +1,4 @@
+* text=auto
+vendor/comgen/** linguist-generated -whitespace
+*.ico binary
+*.dll binary

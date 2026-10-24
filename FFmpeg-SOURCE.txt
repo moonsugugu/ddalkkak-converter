@@ -1,0 +1,10 @@
+FFmpeg 9.0.2 full_build by Gyan Doshi (Gyan.FFmpeg WinGet package).
+This installer redistributes ffmpeg.exe and ffprobe.exe as separate command line tools.
+They are used by subprocess and are not linked to the Python application.
+License: GPL version 3 or later; see FFmpeg-LICENSE.txt and `ffmpeg -L`.
+Upstream: https://ffmpeg.org/
+Corresponding FFmpeg source: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
+Build provider, sources, dependencies and build configuration: https://www.gyan.dev/ffmpeg/builds/
+Build configuration is printed by `ffmpeg -buildconf`.
+Build provider source repository: https://github.com/GyanD/codexffmpeg
+No FFmpeg source modifications were made by this application.
