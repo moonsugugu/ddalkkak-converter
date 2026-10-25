@@ -50,10 +50,11 @@ def correct_scan(original,mode='color',deskew=True,trim=True):
 
 
 def scan_job(source,out,options):
+    from image_io import open_image
     fmt=options.get('format','png')
     if fmt not in {'png','jpg','pdf'}:raise ValueError('스캔 보정은 PNG·JPG·PDF로 저장할 수 있어요.')
     pages,angles=[],[]
-    with Image.open(source) as original:
+    with open_image(source) as original:
         for i,frame in enumerate(ImageSequence.Iterator(original)):
             image,angle=correct_scan(frame,options.get('mode','color'),options.get('deskew',True),options.get('trim',True))
             angles.append(angle)

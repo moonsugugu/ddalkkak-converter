@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pymupdf
 from PIL import Image, ImageOps, ImageSequence
+from image_io import open_image
 
 LABELS = {'size': '목표 용량', 'merge_pdf': 'PDF 합치기', 'pages': '페이지 선택',
           'ocr_txt': '글자 → TXT', 'ocr_docx': '글자 → Word', 'trim': '구간 자르기',
@@ -18,6 +19,9 @@ LABELS = {'size': '목표 용량', 'merge_pdf': 'PDF 합치기', 'pages': '페�
 COLORS = {'size':'#ccefe9', 'merge_pdf':'#ffd9d3', 'pages':'#d9e5ff',
           'ocr_txt':'#e8dcff', 'ocr_docx':'#dfdeff', 'trim':'#ffe5c9',
           'favorite':'#fff0b8', 'save_preset':'#dce8f6','scan':'#e1f1e3','split_pdf':'#f4dbdd'}
+from extra_jobs import LABELS as EXTRA_LABELS, COLORS as EXTRA_COLORS
+LABELS.update(EXTRA_LABELS)
+COLORS.update(EXTRA_COLORS)
 
 
 def page_order(text, count):
@@ -71,7 +75,8 @@ def actions(paths):
     if exts == {'.pdf'}:result += ['split_pdf']
     if exts <= VIDEOS | AUDIO:
         result += ['trim']
-    return result
+    from extra_jobs import actions as extra_actions
+    return result + extra_actions(paths)
 
 
 def normalize_pdf(source, folder, quality, origin):
@@ -96,7 +101,7 @@ def ocr(source, out, stem, target, options, progress_path):
     pictures.mkdir()
     images = []
     if source.suffix.lower() in IMAGES:
-        with Image.open(source) as original:
+        with open_image(source) as original:
             for i, frame in enumerate(ImageSequence.Iterator(original)):
                 image = ImageOps.exif_transpose(frame).convert('RGB')
                 image.thumbnail((3500, 3500), Image.Resampling.LANCZOS)
@@ -163,23 +168,28 @@ def size_job(source, out, quality, origin, options, progress, cancel):
             destination=out/source.name
             shutil.copy2(source,destination)
     elif ext in IMAGES:
-        with Image.open(source) as original:
+        with open_image(source) as original:
             if getattr(original, 'n_frames', 1) > 1:
                 raise ValueError('움직이는 사진은 목표 용량 대신 일반 용량 줄이기를 사용해 주세요.')
             image = ImageOps.exif_transpose(original).copy()
             fmt = original.format
+        if ext in {'.heic','.heif','.svg'}:
+            fmt='JPEG';destination=out/(source.stem+'.jpg')
+        elif fmt not in {'PNG','JPEG','WEBP','AVIF'}:
+            fmt='PNG';destination=out/(source.stem+'.png')
         best = source.read_bytes()
+        if destination.suffix.lower()!=source.suffix.lower():best=None
         for scale in (1, .8, .6, .4, .25):
             frame = image.resize((max(1, round(image.width*scale)), max(1, round(image.height*scale))), Image.Resampling.LANCZOS)
             for q in (88, 70, 50, 30, 15):
                 buf = io.BytesIO()
                 if fmt == 'PNG':
                     frame.convert('RGBA').quantize(colors=max(16, int(q/100*256)), method=Image.Quantize.FASTOCTREE).save(buf, 'PNG', optimize=True)
-                elif fmt in {'JPEG', 'WEBP'}:
+                elif fmt in {'JPEG', 'WEBP','AVIF'}:
                     frame.convert('RGB' if fmt == 'JPEG' else 'RGBA').save(buf, fmt, quality=q, optimize=True)
                 else:
                     frame.save(buf, fmt)
-                if len(buf.getvalue()) < len(best):
+                if best is None or len(buf.getvalue()) < len(best):
                     best = buf.getvalue()
                 if len(best) <= budget:
                     break

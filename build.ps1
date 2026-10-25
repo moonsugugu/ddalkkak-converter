@@ -8,7 +8,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Conversion tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Icon generation failed.' }
 & $docqPython build_com.py
 if ($LASTEXITCODE -ne 0) { throw 'HWP COM interface generation failed.' }
-& $docqPython -m PyInstaller --noconfirm --clean --onefile --windowed --name DdalKkak --icon vendor/docq.ico --version-file version-info.txt --add-data 'vendor;vendor' --add-data 'ocr.ps1;.' --collect-submodules comtypes.gen --hidden-import win32timezone --exclude-module matplotlib --exclude-module scipy --exclude-module pandas --exclude-module pytest --exclude-module IPython app.py
+& $docqPython -m PyInstaller --noconfirm --clean --onefile --windowed --name DdalKkak --icon vendor/docq.ico --version-file version-info.txt --add-data 'vendor;vendor' --add-data 'ocr.ps1;.' --collect-submodules comtypes.gen --collect-submodules markdown --hidden-import PIL.AvifImagePlugin --hidden-import win32timezone --exclude-module matplotlib --exclude-module scipy --exclude-module pandas --exclude-module pytest --exclude-module IPython app.py
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed.' }
 $buildVersion = & $docqPython -c 'from product import VERSION; print(VERSION)'
 & $docqPython build_licenses.py

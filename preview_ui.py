@@ -6,6 +6,8 @@ from pathlib import Path
 import pymupdf
 from PIL import Image,ImageOps,ImageTk
 from job_output import commit_preview,discard_preview
+from job_output import path_size
+from image_io import open_image
 from product import TITLE
 
 
@@ -26,7 +28,7 @@ def render(path,page,size):
             image=Image.open(io.BytesIO(pix.tobytes('png'))).convert('RGB')
             return image,len(doc),f'{sheet.rect.width:.0f} × {sheet.rect.height:.0f} pt'
     try:
-        with Image.open(path) as original:
+        with open_image(path) as original:
             count=getattr(original,'n_frames',1)
             original.seek(min(page,count-1))
             image=ImageOps.exif_transpose(original).convert('RGBA')
@@ -82,7 +84,7 @@ class Pane:
         self.canvas.delete('all')
         try:
             image,self.count,detail=render(view,self.page,(width,height))
-            self.info.set(path.name+' · '+byte_label(path.stat().st_size)+(' · '+detail if detail else ''))
+            self.info.set(path.name+' · '+byte_label(path_size(path))+(' · '+detail if detail else ''))
             if image:
                 self.photo=ImageTk.PhotoImage(image)
                 self.canvas.create_image((width+24)/2,(height+24)/2,image=self.photo)
@@ -129,8 +131,8 @@ class ReviewWindow:
         sources=result.get('source_files') or [result['source']]
         self.before.set(sources,result.get('_before_views',[None]*len(sources)))
         self.after.set(result['files'],result.get('_after_views',[None]*len(result['files'])))
-        before=sum(Path(p).stat().st_size for p in sources)
-        after=sum(Path(p).stat().st_size for p in result['files'])
+        before=sum(path_size(p) for p in sources)
+        after=sum(path_size(p) for p in result['files'])
         difference=f' · {(1-after/before)*100:.1f}% 줄어듦' if before and after<before else ''
         self.summary.set(f'{byte_label(before)} → {byte_label(after)}{difference} · 결과 {len(result["files"])}개')
         notice='저장을 누르기 전에는 결과 폴더를 만들지 않아요.'

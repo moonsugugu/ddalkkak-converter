@@ -3,6 +3,8 @@ __pycache__/
 build/
 dist/
 validation/
+output/
+홍보글/캡처/
 *.spec
 *.log
 .env

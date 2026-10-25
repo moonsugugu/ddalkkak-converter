@@ -2,7 +2,7 @@
 # Created by makepy.py version 0.5.01
 # By python version 3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 12:52:36) [MSC v.1944 32 bit (Intel)]
 # From type library '{7D2B6F3C-1D95-4E0C-BF5A-5EE564186FBC}'
-# On Sat Oct 24 12:02:27 2026
+# On Sun Oct 25 15:22:17 2026
 'HwpObject 1.0 Type Library'
 makepy_version = '0.5.01'
 python_version = 0x30d0ff0

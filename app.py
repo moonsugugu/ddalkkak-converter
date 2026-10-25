@@ -87,7 +87,7 @@ def menu_choices(paths,settings):
     common=targets(paths[0]) if paths else []
     for path in paths[1:]:
         common=[t for t in common if t in targets(path)]
-    priority=['pdf','png','compress','jpg','docx','size','scan','split_pdf','mp4','mp3','gif','webp','hwp','hwpx','xlsx','pptx','txt','wav','merge_pdf','pages','ocr_txt','ocr_docx']
+    priority=['pdf','png','compress','jpg','photo_edit','pdf_edit','docx','size','scan','split_pdf','photo_redact','photo_annotate','photo_collage','photo_metadata','pdf_stamp','pdf_protect','mp4','mp3','gif','webp','avif','hwp','hwpx','xlsx','pptx','txt','wav','merge_pdf','pages','ocr_txt','ocr_docx','md','html','epub','srt','vtt','tsv','ods','pack','unpack']
     usage=settings.get('usage',{})
     tools=actions(paths)
     ordered=sorted(common+tools,key=lambda t:(-min(1000,usage.get(paths[0].suffix.lower()+':'+t,0)),priority.index(t) if t in priority else 99))
@@ -238,7 +238,7 @@ class App:
             subtitle = '★ 즐겨찾기' if target.startswith('fav:') else {'compress':'원본 보존', 'images':'모든 사진',
                        'size':'MB 지정','pages':'순서·제외','merge_pdf':'여러 파일','trim':'시작·끝',
                        'ocr_txt':'글자 인식','ocr_docx':'글자 인식','save_preset':'다음에 바로',
-                       'scan':'기울기·여백','split_pdf':'한 쪽·묶음'}.get(target, '.'+target)
+                       'scan':'기울기·여백','split_pdf':'한 쪽·묶음'}.get(target, '편집 도구' if target in TOOL_LABELS else '.'+target)
             self.text(x, y+25 if special else y+18, '설치 필요' if reason else subtitle, 8, MUTED, tags=tag)
             c.tag_bind(tag, '<Enter>', lambda _, t=target, r=reason: self.hover(t, r))
             c.tag_bind(tag, '<Leave>', lambda _: self.leave())
@@ -264,6 +264,8 @@ class App:
     def reason(self,target):
         if target in self.preset_map:
             target = self.preset_map[target]['target']
+        from extra_jobs import LABELS as EXTRA_LABELS,handles
+        if target in EXTRA_LABELS or all(handles(p,target) for p in self.files):return ''
         if target in {'save_preset','ocr_txt','ocr_docx','trim','size','scan','split_pdf'}:
             return ''
         if target in {'pages','merge_pdf'}:
@@ -346,7 +348,16 @@ class App:
             from job_dialog import ask
             self.hide()
             formats = [t for t in self.choices if t not in TOOL_LABELS and not t.startswith('fav:')]
-            answer = ask(self.root,target,self.files,quality,formats)
+            self.busy=True
+            win32event.SetEvent(self.busy_event)
+            try:answer = ask(self.root,target,self.files,quality,formats)
+            except (ValueError,OSError) as error:
+                from tkinter import messagebox
+                messagebox.showerror(TITLE,str(error),parent=self.root)
+                return
+            finally:
+                self.busy=False
+                win32event.ResetEvent(self.busy_event)
             if not answer:
                 return
             options, sources, quality = answer['options'],answer['sources'],answer['quality']
@@ -369,7 +380,7 @@ class App:
         self.hide()
         paths, origin = list(self.files), self.origin_hwnd
         preview=self.settings.get('preview',True) and '--smoke-convert' not in sys.argv
-        if target == 'merge_pdf':
+        if target in {'merge_pdf','photo_collage','pack'}:
             sources = sources or [str(p) for p in paths]
             paths = paths[:1]
         if owns_focus and origin and win32gui.IsWindow(origin):

@@ -7,6 +7,10 @@ from product import TITLE
 
 
 def ask(root, target, paths, quality, formats):
+    from extra_jobs import LABELS as EXTRA_LABELS
+    if target in EXTRA_LABELS:
+        from editors import ask as ask_extra
+        return ask_extra(root,target,paths,quality)
     window = tk.Toplevel(root)
     window.title(TITLE+' · 변환 설정')
     window.configure(bg='#f3effa')

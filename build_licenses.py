@@ -6,7 +6,7 @@ import sys
 ROOT = Path(__file__).resolve().parent
 PACKAGES = ('Pillow', 'PyMuPDF', 'pywin32', 'python-docx', 'openpyxl',
             'python-pptx', 'pystray', 'comtypes', 'pyinstaller', 'lxml',
-            'et_xmlfile', 'typing_extensions', 'six', 'packaging')
+            'et_xmlfile', 'typing_extensions', 'six', 'packaging','markdown')
 
 
 def main():

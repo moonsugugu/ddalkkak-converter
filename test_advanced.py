@@ -113,8 +113,8 @@ class AdvancedTests(unittest.TestCase):
 
 class UpdateTests(unittest.TestCase):
     def metadata(self,payload=b'A'*2048):
-        return {'app_id':APP_ID,'version':'3.2.0','os':'windows','arch':'x86','channel':'stable',
-                'url':'https://github.com/moonsugugu/ddalkkak-converter/releases/download/v3.2.0/setup.exe',
+        return {'app_id':APP_ID,'version':'3.3.0','os':'windows','arch':'x86','channel':'stable',
+                'url':'https://github.com/moonsugugu/ddalkkak-converter/releases/download/v3.3.0/setup.exe',
                 'size':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}
 
     def test_semver_and_platform_and_hash_required(self):

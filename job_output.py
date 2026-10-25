@@ -8,6 +8,11 @@ from pathlib import Path
 MARKER='_ddalkkak_preview.json'
 
 
+def path_size(path):
+    path=Path(path)
+    return sum(p.stat().st_size for p in path.rglob('*') if p.is_file()) if path.is_dir() else path.stat().st_size
+
+
 def finish_result(source,work,outputs,extra=None,preview=False):
     source,work=Path(source),Path(work)
     result={'source':str(source),'folder':str(work),'files':[str(p) for p in outputs],**(extra or {})}
@@ -44,8 +49,13 @@ def validate_stage(result):
     marker=json.loads((stage/MARKER).read_text(encoding='utf-8'))
     if marker!={'source':str(source),'token':result['_token']}:
         raise ValueError('이 작업의 미리보기 폴더가 아니에요.')
-    if any(Path(p).parent.absolute()!=stage or not Path(p).is_file() or Path(p).is_symlink() for p in result['files']):
+    if any(Path(p).parent.absolute()!=stage or not Path(p).exists() or Path(p).is_symlink() or Path(p).is_junction() for p in result['files']):
         raise ValueError('미리보기 결과 파일을 확인할 수 없어요.')
+    for path in result['files']:
+        if Path(path).is_dir():
+            for child in Path(path).rglob('*'):
+                if child.is_symlink() or child.is_junction() or not child.resolve().is_relative_to(stage.resolve()):
+                    raise ValueError('미리보기 결과에 외부 경로가 있어요.')
     return source,stage
 
 

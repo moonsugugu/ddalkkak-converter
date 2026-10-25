@@ -13,19 +13,22 @@ import winreg
 from pathlib import Path
 
 from media import VIDEOS, AUDIO, MediaCancelled, executable as media_executable
+from extra_formats import EXTRA_INPUTS, FORMAT_LABELS, targets as extra_targets
 
 WORD = {'.doc', '.docx', '.rtf', '.odt'}
 SHEETS = {'.xls', '.xlsx', '.csv'}
 SLIDES = {'.ppt', '.pptx'}
 HANGUL = {'.hwp', '.hwpx'}
 IMAGES = {'.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff', '.webp', '.gif', '.ico'}
-SUPPORTED = WORD | SHEETS | SLIDES | HANGUL | IMAGES | VIDEOS | AUDIO | {'.pdf', '.txt'}
+IMAGES |= {'.heic','.heif','.avif','.svg'}
+SUPPORTED = WORD | SHEETS | SLIDES | HANGUL | IMAGES | VIDEOS | AUDIO | {'.pdf', '.txt'} | EXTRA_INPUTS
 LABELS = {'pdf': 'PDF', 'docx': 'Word', 'hwp': '한글', 'hwpx': 'HWPX',
           'xlsx': 'Excel', 'pptx': 'PPT', 'png': 'PNG', 'jpg': 'JPG',
           'txt': '텍스트', 'csv': 'CSV', 'webp': 'WebP', 'bmp': 'BMP', 'tiff': 'TIFF', 'ico': '아이콘',
           'compress': '용량\n줄이기', 'images': '사진\n꺼내기', 'mp4':'MP4', 'mov':'MOV',
           'mkv':'MKV', 'webm':'WebM', 'gif':'GIF', 'mp3':'MP3', 'wav':'WAV', 'm4a':'M4A',
           'flac':'FLAC', 'ogg':'OGG'}
+LABELS.update(FORMAT_LABELS)
 COLORS = {'pdf': '#ffddd7', 'docx': '#dfdfff', 'hwp': '#d7eaff',
           'hwpx': '#e0efff', 'xlsx': '#d5f0e3', 'pptx': '#ffe4c9',
           'png': '#fff1bd', 'jpg': '#ffebca', 'txt': '#ece1fa', 'csv': '#dcf2e6',
@@ -80,13 +83,14 @@ def targets(path):
     elif ext == '.pdf':
         values = ['docx', 'xlsx', 'pptx', 'png', 'jpg', 'txt', 'compress', 'images']
     elif ext in IMAGES:
-        values = ['png', 'jpg', 'webp', 'bmp', 'tiff', 'ico', 'pdf', 'docx', 'pptx', 'compress']
+        values = ['png', 'jpg', 'webp', 'avif', 'bmp', 'tiff', 'ico', 'pdf', 'docx', 'pptx', 'compress']
     elif ext in VIDEOS:
         values = ['mp4', 'webm', 'mov', 'mkv', 'gif', 'mp3', 'wav', 'compress']
     elif ext in AUDIO:
         values = ['mp3', 'wav', 'm4a', 'flac', 'ogg']
     else:
-        return []
+        values = []
+    values = list(dict.fromkeys(values + extra_targets(ext)))
     if ext in {'.docx', '.pptx'}:
         values += ['compress', 'images']
     return [v for v in values if '.' + v != ext and not (ext == '.jpeg' and v == 'jpg')
@@ -410,7 +414,8 @@ def safe_cell(value):
 
 def image_convert(source, out, stem, target, quality):
     from PIL import Image, ImageOps
-    with Image.open(source) as image:
+    from image_io import open_image
+    with open_image(source) as image:
         # Multi-frame TIFFs are processed sequentially to bound memory.
         frames = getattr(image, 'n_frames', 1)
         if target == 'pdf':
@@ -426,7 +431,7 @@ def image_convert(source, out, stem, target, quality):
         for i in range(frames):
             image.seek(i)
             frame = ImageOps.exif_transpose(image.copy())
-            if target in {'png', 'webp', 'bmp', 'tiff', 'ico'}:
+            if target in {'png', 'webp', 'avif', 'bmp', 'tiff', 'ico'}:
                 name = f'{stem}_{i+1:03d}.{target}' if frames > 1 else f'{stem}.{target}'
                 if target == 'ico':
                     frame = frame.convert('RGBA')
@@ -434,7 +439,7 @@ def image_convert(source, out, stem, target, quality):
                     icon = Image.new('RGBA', (256, 256))
                     icon.alpha_composite(frame, ((256-frame.width)//2, (256-frame.height)//2))
                     icon.save(out/name, sizes=[(s,s) for s in (16,32,48,64,128,256)])
-                elif target == 'webp':
+                elif target in {'webp','avif'}:
                     frame.save(out/name, quality={'small':65, 'balanced':85, 'high':95}[quality])
                 elif target == 'tiff':
                     frame.save(out/name, compression='tiff_deflate')
@@ -520,6 +525,10 @@ def photos(source, work, stem, target, quality, origin_hwnd):
         return pdf_images(source, work if target == 'images' else work/f'{stem}.pdf', quality,
                           extract=target == 'images')
     if ext in IMAGES:
+        if ext in {'.heic','.heif','.svg','.avif'}:
+            from image_io import oriented,save_image
+            save_image(oriented(source),work/(stem+'.jpg'),quality)
+            return 1
         (work/source.name).write_bytes(optimize_image(source.read_bytes(), quality))
         return 1
     if ext != '.hwp':
@@ -542,6 +551,9 @@ def photos(source, work, stem, target, quality, origin_hwnd):
 
 
 def perform(source, target, quality='balanced', origin_hwnd=0, progress_path=None, cancel_path=None, options=None, sources=None, preview=False):
+    from extra_jobs import handles,perform as extra_perform
+    if handles(source,target):
+        return extra_perform(source,target,quality,origin_hwnd,progress_path,cancel_path,options,sources,preview)
     if target in {'size', 'merge_pdf', 'pages', 'ocr_txt', 'ocr_docx', 'trim', 'scan', 'split_pdf'}:
         from advanced import perform as advanced_perform
         return advanced_perform(source, target, quality, origin_hwnd, progress_path, cancel_path, options, sources, preview)
