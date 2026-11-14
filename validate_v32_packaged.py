@@ -13,7 +13,7 @@ ROOT=Path(__file__).resolve().parent
 
 def main():
     folder=ROOT/'validation'/'v32'/'packaged';folder.mkdir(parents=True,exist_ok=True)
-    exe=ROOT/'dist'/'DdalKkak.exe';proof={};counter=0
+    exe=ROOT/'dist'/'DdalKkak'/'DdalKkak.exe';proof={};counter=0
     def run(source,target,options=None,sources=None,preview=True):
         nonlocal counter
         counter+=1;request=folder/f'request-{counter}.json';response=folder/f'response-{counter}.json'

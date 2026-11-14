@@ -44,7 +44,7 @@ def main():
     try:ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:pass
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exe', type=Path, default=Path('dist/DdalKkak.exe'))
+    parser.add_argument('--exe', type=Path, default=Path('dist/DdalKkak/DdalKkak.exe'))
     parser.add_argument('--native', action='store_true')
     parser.add_argument('--preserve', action='store_true')
     parser.add_argument('--source', type=Path)

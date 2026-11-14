@@ -15,7 +15,7 @@ from media import executable, probe
 def main():
     folder = Path('validation/packaged-upgrade').resolve()
     folder.mkdir(parents=True, exist_ok=True)
-    exe = Path('dist/DdalKkak.exe').resolve()
+    exe = Path('dist/DdalKkak/DdalKkak.exe').resolve()
     photo = folder/'사진.jpg'
     Image.effect_noise((1200, 800), 75).convert('RGB').save(photo, quality=100)
     source = folder/'사진 문서.docx'

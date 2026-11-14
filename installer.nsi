@@ -6,11 +6,13 @@ Unicode true
 !include "WordFunc.nsh"
 !include "x64.nsh"
 !ifndef VERSION
-!define VERSION "3.2.0"
+!define VERSION "3.2.1"
 !endif
 !ifndef PAYLOAD
 !define PAYLOAD "dist"
 !endif
+# PyInstaller folder build (--onedir): DdalKkak.exe + _internal + tools, same layout as the install folder.
+!define APPDIR "${PAYLOAD}\DdalKkak"
 !ifndef OUTPUT
 !define OUTPUT "dist\DdalKkak-Setup-${VERSION}.exe"
 !endif
@@ -62,6 +64,7 @@ Var ProbeCommitted
 Var LicenseCommitted
 Var SourceCommitted
 Var UninstallCommitted
+Var RuntimeCommitted
 
 !macro CommitFile FILE FLAG
     ClearErrors
@@ -85,6 +88,31 @@ Var UninstallCommitted
 !macro CleanPrevious FILE
     Delete "${FILE}.previous"
     IfFileExists "${FILE}.previous" failed
+!macroend
+
+# Same .new/.previous swap for the _internal runtime folder.
+!macro CommitDir DIR FLAG
+    ClearErrors
+    IfFileExists "${DIR}\*.*" 0 +2
+    Rename "${DIR}" "${DIR}.previous"
+    IfErrors rollback
+    Rename "${DIR}.new" "${DIR}"
+    IfErrors rollback
+    StrCpy ${FLAG} 1
+!macroend
+
+!macro RestoreDir DIR FLAG
+    ${If} ${FileExists} "${DIR}.previous\*.*"
+        RMDir /r "${DIR}"
+        Rename "${DIR}.previous" "${DIR}"
+    ${ElseIf} ${FLAG} == 1
+        RMDir /r "${DIR}"
+    ${EndIf}
+!macroend
+
+!macro CleanPreviousDir DIR
+    RMDir /r "${DIR}.previous"
+    IfFileExists "${DIR}.previous\*.*" failed
 !macroend
 
 Function .onInit
@@ -175,6 +203,7 @@ FunctionEnd
 
 Function .onGUIEnd
     ${If} $OwnsSetupLock == 1
+        RMDir /r "$INSTDIR\_internal.new"
         Delete "$INSTDIR\DdalKkak.exe.new"
         Delete "$INSTDIR\app.ico.new"
         Delete "$INSTDIR\사용방법.md.new"
@@ -225,20 +254,25 @@ FunctionEnd
 
 Section "딸깍변환"
     Call StopApp
-    SetOutPath "$INSTDIR"
+    RMDir /r "$INSTDIR\_internal.new"
+    SetOutPath "$INSTDIR\_internal.new"
     ClearErrors
-    File /oname=DdalKkak.exe.new "${PAYLOAD}\DdalKkak.exe"
+    File /r "${APPDIR}\_internal\*.*"
+    SetOutPath "$INSTDIR"
+    File /oname=DdalKkak.exe.new "${APPDIR}\DdalKkak.exe"
     File /oname=app.ico.new "vendor\docq.ico"
     File /oname=사용방법.md.new "README.md"
     File /oname=LICENSES.txt.new "${PAYLOAD}\LICENSES.txt"
     SetOutPath "$INSTDIR\tools"
-    File /oname=ffmpeg.exe.new "${PAYLOAD}\tools\ffmpeg.exe"
-    File /oname=ffprobe.exe.new "${PAYLOAD}\tools\ffprobe.exe"
-    File /oname=FFmpeg-LICENSE.txt.new "${PAYLOAD}\tools\FFmpeg-LICENSE.txt"
-    File /oname=FFmpeg-SOURCE.txt.new "${PAYLOAD}\tools\FFmpeg-SOURCE.txt"
+    File /oname=ffmpeg.exe.new "${APPDIR}\tools\ffmpeg.exe"
+    File /oname=ffprobe.exe.new "${APPDIR}\tools\ffprobe.exe"
+    File /oname=FFmpeg-LICENSE.txt.new "${APPDIR}\tools\FFmpeg-LICENSE.txt"
+    File /oname=FFmpeg-SOURCE.txt.new "${APPDIR}\tools\FFmpeg-SOURCE.txt"
     IfErrors failed
     WriteUninstaller "$INSTDIR\Uninstall.exe.new"
     IfErrors failed
+    SetOutPath "$INSTDIR"
+    !insertmacro CleanPreviousDir "$INSTDIR\_internal"
     !insertmacro CleanPrevious "$INSTDIR\DdalKkak.exe"
     !insertmacro CleanPrevious "$INSTDIR\app.ico"
     !insertmacro CleanPrevious "$INSTDIR\사용방법.md"
@@ -248,6 +282,7 @@ Section "딸깍변환"
     !insertmacro CleanPrevious "$INSTDIR\tools\FFmpeg-LICENSE.txt"
     !insertmacro CleanPrevious "$INSTDIR\tools\FFmpeg-SOURCE.txt"
     !insertmacro CleanPrevious "$INSTDIR\Uninstall.exe"
+    !insertmacro CommitDir "$INSTDIR\_internal" $RuntimeCommitted
     !insertmacro CommitFile "$INSTDIR\DdalKkak.exe" $MainCommitted
     !insertmacro CommitFile "$INSTDIR\app.ico" $IconCommitted
     !insertmacro CommitFile "$INSTDIR\사용방법.md" $ReadmeCommitted
@@ -279,6 +314,7 @@ Section "딸깍변환"
     Delete "$DESKTOP\문서큐.lnk"
     Delete "$SMSTARTUP\문서큐.lnk"
     Delete "$INSTDIR\DocQ.exe"
+    RMDir /r "$INSTDIR\_internal.previous"
     Delete "$INSTDIR\DdalKkak.exe.previous"
     Delete "$INSTDIR\app.ico.previous"
     Delete "$INSTDIR\사용방법.md.previous"
@@ -291,6 +327,7 @@ Section "딸깍변환"
     SetErrorLevel 0
     Goto finished
     rollback:
+        !insertmacro RestoreDir "$INSTDIR\_internal" $RuntimeCommitted
         !insertmacro RestoreFile "$INSTDIR\DdalKkak.exe" $MainCommitted
         !insertmacro RestoreFile "$INSTDIR\app.ico" $IconCommitted
         !insertmacro RestoreFile "$INSTDIR\사용방법.md" $ReadmeCommitted
@@ -301,6 +338,8 @@ Section "딸깍변환"
         !insertmacro RestoreFile "$INSTDIR\tools\FFmpeg-SOURCE.txt" $SourceCommitted
         !insertmacro RestoreFile "$INSTDIR\Uninstall.exe" $UninstallCommitted
     failed:
+        SetOutPath "$INSTDIR"
+        RMDir /r "$INSTDIR\_internal.new"
         Delete "$INSTDIR\DdalKkak.exe.new"
         Delete "$INSTDIR\app.ico.new"
         Delete "$INSTDIR\사용방법.md.new"
@@ -353,6 +392,9 @@ Section "Uninstall"
     RMDir "$SMPROGRAMS\딸깍변환"
     Delete "$INSTDIR\DdalKkak.exe"
     Delete "$INSTDIR\DocQ.exe"
+    RMDir /r "$INSTDIR\_internal"
+    RMDir /r "$INSTDIR\_internal.new"
+    RMDir /r "$INSTDIR\_internal.previous"
     Delete "$INSTDIR\app.ico"
     Delete "$INSTDIR\사용방법.md"
     Delete "$INSTDIR\LICENSES.txt"

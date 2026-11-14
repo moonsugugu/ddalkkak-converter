@@ -6,7 +6,7 @@ from docx import Document
 import win32api,win32con,win32gui
 from win32com.client import Dispatch
 from media import probe
-parser=argparse.ArgumentParser();parser.add_argument('--exe',type=Path,default=Path('dist/DdalKkak.exe'));args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('--exe',type=Path,default=Path('dist/DdalKkak/DdalKkak.exe'));args=parser.parse_args()
 exe=args.exe.resolve();folder=Path('validation/advanced-packaged').resolve();folder.mkdir(parents=True,exist_ok=True)
 original=json.loads(Path('validation/upgrade-native/report.json').read_text(encoding='utf-8'))['.docx -> hwp']['files'][0]
 hwp=folder/'사진 한글.hwp';shutil.copy2(original,hwp)

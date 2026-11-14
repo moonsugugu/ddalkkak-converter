@@ -4,7 +4,7 @@ from job_output import commit_preview,discard_preview
 import pymupdf
 from PIL import Image
 root=Path('validation/v31').resolve();state=json.loads((root/'ui-report.json').read_text(encoding='utf-8'));fixtures=Path(state['fixtures'])
-exe=Path('dist/DdalKkak.exe').resolve();report={}
+exe=Path('dist/DdalKkak/DdalKkak.exe').resolve();report={}
 for source,target,options,save in [(fixtures/'기울어진 스캔.png','scan',{'mode':'bw','format':'png'},True),
                                   (fixtures/'다섯 쪽.pdf','split_pdf',{'chunk_pages':2},True),
                                   (fixtures/'다섯 쪽.pdf','split_pdf',{'chunk_pages':1},False)]:

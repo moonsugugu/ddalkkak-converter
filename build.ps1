@@ -8,12 +8,13 @@ if ($LASTEXITCODE -ne 0) { throw 'Conversion tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Icon generation failed.' }
 & $docqPython build_com.py
 if ($LASTEXITCODE -ne 0) { throw 'HWP COM interface generation failed.' }
-& $docqPython -m PyInstaller --noconfirm --clean --onefile --windowed --name DdalKkak --icon vendor/docq.ico --version-file version-info.txt --add-data 'vendor;vendor' --add-data 'ocr.ps1;.' --collect-submodules comtypes.gen --collect-submodules markdown --hidden-import PIL.AvifImagePlugin --hidden-import win32timezone --exclude-module matplotlib --exclude-module scipy --exclude-module pandas --exclude-module pytest --exclude-module IPython app.py
+& $docqPython -m PyInstaller --noconfirm --clean --onedir --noupx --windowed --name DdalKkak --icon vendor/docq.ico --version-file version-info.txt --add-data 'vendor;vendor' --add-data 'ocr.ps1;.' --collect-submodules comtypes.gen --collect-submodules markdown --hidden-import PIL.AvifImagePlugin --hidden-import win32timezone --exclude-module matplotlib --exclude-module scipy --exclude-module pandas --exclude-module pytest --exclude-module IPython app.py
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed.' }
 $buildVersion = & $docqPython -c 'from product import VERSION; print(VERSION)'
 & $docqPython build_licenses.py
 if ($LASTEXITCODE -ne 0) { throw 'License notice generation failed.' }
-$buildTools = Join-Path $PSScriptRoot 'dist\tools'
+# The folder build mirrors the installed layout: FFmpeg goes next to DdalKkak.exe.
+$buildTools = Join-Path $PSScriptRoot 'dist\DdalKkak\tools'
 New-Item -ItemType Directory -Force -Path $buildTools | Out-Null
 $ffmpegBuild = & $docqPython -c 'from media import executable; from pathlib import Path; print(Path(executable()).parent)'
 Copy-Item -LiteralPath (Join-Path $ffmpegBuild 'ffmpeg.exe') -Destination $buildTools -Force
