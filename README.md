@@ -98,9 +98,12 @@ Windows 10/11 **64비트**에서 설치파일을 실행하세요. 바탕 화면�
 
 Python 3.13 32비트 가상환경(한글 COM 호환), requirements.txt, NSIS 3가 필요합니다. `build.ps1`은 테스트 → 아이콘·HWP 타입 라이브러리 → 앱 폴더(`dist\DdalKkak`) → FFmpeg 도구 포함 NSIS 설치파일 → 해시·메타데이터·zip 순서로 만듭니다. 3.2.1부터 앱은 한 파일(`--onefile`)이 아니라 폴더형(`--onedir`, UPX 끔)으로 만듭니다. 켤 때마다 임시 폴더에 풀어 실행하는 방식이 백신에 악성코드처럼 보이기 때문입니다.
 
+PyInstaller는 **이 PC에서 직접 빌드한 부트로더**를 씁니다. 배포판 부트로더로 만든 3.2.1 앱이 바이러스토탈에서 알약 포함 13곳에 `Gen:Variant.Symmi`로 잡혔기 때문입니다(2026-11-15). `requirements.txt`를 깐 다음 아래처럼 PyInstaller를 바꿔 넣습니다. 소스와 다시 빌드하는 법은 `C:\Users\xdaet\workspace\pyinstaller-custom-bootloader\README.md`에 있습니다(Visual Studio Build Tools 2022 필요). `pip install pyinstaller`로 다시 깔면 배포판 부트로더로 돌아가니 주의합니다.
+
 ```powershell
 py -3.13-32 -m venv --system-site-packages .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install --force-reinstall --no-deps C:\Users\xdaet\workspace\pyinstaller-custom-bootloader\pyinstaller-6.22.3
 .\.venv\Scripts\python.exe -m unittest -v
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
