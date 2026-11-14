@@ -6,9 +6,7 @@ made by [문수네집](https://moonsunezip.com) · [Instagram](https://www.insta
 
 ## 설치와 사용
 
-[**Windows 설치파일 다운로드**](https://github.com/moonsugugu/ddalkkak-converter/releases/download/v3.2.1/DdalKkak-Setup-3.2.1.exe) · [zip으로 받기](https://github.com/moonsugugu/ddalkkak-converter/releases/download/v3.2.1/DdalKkak-Setup-3.2.1.zip) · [릴리스와 SHA-256](https://github.com/moonsugugu/ddalkkak-converter/releases/latest)
-
-브라우저나 학교 메신저가 exe 내려받기를 막으면 zip으로 받아 압축을 푼 다음 실행하세요. 안에 같은 설치파일이 들어 있습니다.
+[**Windows 설치파일 다운로드**](https://github.com/moonsugugu/ddalkkak-converter/releases/download/v3.2.1/DdalKkak-Setup-3.2.1.exe) · [릴리스와 SHA-256](https://github.com/moonsugugu/ddalkkak-converter/releases/latest)
 
 Windows 10/11 **64비트**에서 설치파일을 실행하세요. 바탕 화면·시작 메뉴 바로가기와 Windows 앱 제거 목록에 등록합니다. 기존 문서큐는 새 설치파일을 한 번 실행하면 딸깍변환으로 전환됩니다. 단축키·품질 설정은 보존합니다. 설치본은 FFmpeg/ffprobe를 포함하므로 별도 설치가 필요 없습니다.
 
@@ -92,7 +90,7 @@ Windows 10/11 **64비트**에서 설치파일을 실행하세요. 바탕 화면�
 
 공식 배포는 이 저장소의 GitHub Releases와 위 고정 피드를 사용합니다. 현재와 같은 버전이면 최신 버전으로 안내하고, 더 높은 정식 버전이 게시되면 업데이트를 안내합니다. 이전 문서큐에는 업데이트 기능이 없어 이번 설치파일을 한 번 실행해야 합니다. 공개 릴리스에서 구버전의 새 버전 감지부터 설치까지 이어지는 전체 검증은 다음 버전 배포 때 별도로 수행합니다.
 
-공개할 때 `product.py`, `version-info.txt`, 설치파일·릴리스 태그·`latest.json` 버전을 일치시키세요. `build.ps1`이 만든 설치파일·같은 설치파일을 담은 zip·`SHA256SUMS.txt`를 먼저 릴리스에 올리고, 마지막에 `latest.json`을 올립니다. 공개 피드에는 토큰이 필요하지 않아야 합니다. 설치파일은 현재 코드 서명 인증서로 서명하지 않았습니다.
+공개할 때 `product.py`, `version-info.txt`, 설치파일·릴리스 태그·`latest.json` 버전을 일치시키세요. `build.ps1`이 만든 설치파일·`SHA256SUMS.txt`를 먼저 릴리스에 올리고, 마지막에 `latest.json`을 올립니다. 공개 피드에는 토큰이 필요하지 않아야 합니다. 설치파일은 현재 코드 서명 인증서로 서명하지 않았습니다.
 
 ## 빌드와 검증
 
